@@ -1,0 +1,165 @@
+import random
+
+#this code is kinda trashy and hard to understand very vague lazy approach 
+class Player(object):
+    def __init__(self,bankroll=100):
+        self.bankroll = bankroll
+    def addBankroll(self, amount):
+        self.bankroll+=amount
+    def decreaseBankroll(self, amount):
+        self.bankroll-=amount
+class Deck(object):
+    def __init__(self):
+        self.hashcards = {'ace':[1,11],'2':2,'3':3,'4':4,'5':5,'6':6,'7':7,'8':8,'9':9,'10':10,'Jack':10, 'queen':10,'king':10}
+        self.deckcards=list(self.hashcards)*4
+    #in blackjack you are given two random cards
+    def shuffle(self):
+        random.shuffle(self.deckcards)
+    def hit(self):
+        return  self.deckcards.pop()
+    
+    def hand(self,player1):
+        x= self.hit()
+        y= self.hit()
+        if(x == 'ace' or y == 'ace'):
+            if(x=='ace'):           
+                z=11
+                z += self.hashcards[y]
+                if(player1==1):
+                    print('Your cards are %s and %s their value is %s' %(x,y,z))
+                z =(z,x)
+                return z
+            else:
+                z=11
+                z += self.hashcards[x]
+                if(player1==1):
+                    print('Your cards are %s and %s their value is %s' %(x,y,z))
+                z =(z,x)
+                return z
+        z = self.hashcards[x] +self.hashcards[y]
+        if(player1==1):
+            print('Your cards are %s and %s their value is %s' %(x,y,z))
+        if(player1==2):
+            print('House has a %s and its value is %s' %(x,self.hashcards[x]))
+        return z
+def compareHands(arg1, arg2):
+    if(arg1==arg2):
+        return 'tie'
+    else:
+        return arg1>arg2
+    
+def bust(arg1):
+    return arg1>21
+        
+def playBlackJack():
+    while True:
+        try:
+            money = int(input('How much money you have?? '))
+        except:
+            print('you need to give us a number')
+        #this will probably cost processing time
+        else:
+            if(money in list(range(1,10000))):
+                break
+    player = Player(money)
+    print('You have this much money to bet:',player.bankroll)
+    while True:
+        deck =Deck()
+        deck.shuffle()
+        choice=''
+        ace1=''
+        ace2=''
+        keepPlaying=''
+        lost=False
+        houseLost=False
+        while True:
+            try: 
+                bet = int(input('How much money do you want to bet? '))
+            except:
+                print('u need to give us an int')
+            #this will probably cost processing time
+            else:
+                if (bet in list(range(1,10000))):
+                    if(bet>player.bankroll):
+                        print('you are betting more than what you have bro try again')
+                    else:
+                        break
+        player1hand = deck.hand(1)
+        player2hand = deck.hand(2)
+        if(type(player1hand)==tuple):
+            player1hand, ace1=player1hand
+        if(type(player2hand)==tuple):
+            player2hand, ace2=player2hand
+        #player choices
+        while True:
+                while not (choice == 'HIT' or choice=='STAND'):
+                    choice = input('Do you want to hit or stand? ').upper()
+                if(choice=='HIT'):
+                    player1hit = deck.hit()
+                    print('you got a',player1hit)
+                    player1hit = deck.hashcards[player1hit]
+                    if(player1hit==[1,11]):
+                        ace3 = input('you got an ace what do you want 1 or 11 ')
+                        if(ace3=='1'):
+                            player1hit=1
+                        else:
+                            player1hit=11
+                    player1hand+=player1hit
+                    if(ace1 and player1hand>21):
+                            player1hand-=10
+                    print(player1hand)
+                    if(bust(player1hand)):
+                        print('you busted')
+                        print('the house wins with %s, and you lost with %s'%(player2hand,player1hand))
+                        lost=True
+                        player.decreaseBankroll(bet)
+                        print('You have %s in your account'%(player.bankroll))
+                        break
+                    choice=''
+                else:
+                    print('you choose to stand')
+                    break
+        #house
+        while True:
+            if(player2hand<14):
+                player2hit = deck.hit()
+                player2hit = deck.hashcards[player2hit]
+                if(player2hit==[1,11]):
+                    if(player2hand>10):
+                        player2hit=11
+                    else:
+                        player2hit=1
+                player2hand+=player2hit
+                if(ace2 and player2hand>21):
+                    player2hand-=10
+                if(bust(player2hand)):
+                        print('house busted')
+                        houseLost=True
+                        break
+            else:
+                break
+        if(houseLost and lost):
+            print('you both busted so tied')
+        if(houseLost):
+            print('You win with %s and the House lost with %s'%(player1hand,player2hand))
+            player.addBankroll(bet)
+            print('You have %s in your account'%(player.bankroll))
+        if not (lost):
+            winner= compareHands(player1hand, player2hand)
+            if(winner=='tie'):
+                print('there was a tie')
+            elif(winner):
+                print('You win with %s and the House lost with %s'%(player1hand,player2hand))
+                player.addBankroll(bet)
+                print('You have %s in your account'%(player.bankroll))
+            else:
+                print('the house wins with %s, and you lost with %s'%(player2hand,player1hand))
+                player.decreaseBankroll(bet)
+                print('You have %s in your account' %(player.bankroll))
+        if(player.bankroll==0):
+            print('you lost all you money gg')
+            break
+        while not (keepPlaying == 'YES' or keepPlaying =='NO'):
+            keepPlaying = input('Do you want to keep playing, Yes or No? ').upper()
+        if(keepPlaying=='NO'):
+            break
